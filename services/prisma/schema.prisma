@@ -6,6 +6,111 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
+}
+
+model user {
+  id         Int        @id @default(autoincrement()) @db.UnsignedInt
+  username   String     @unique @db.VarChar(200)
+  password   String     @db.VarChar(255)
+  roleId     Int?       @db.UnsignedInt
+  role       role?      @relation(fields: [roleId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  avatar     String?    @db.VarChar(100)
+  create_at  DateTime   @default(now()) @db.DateTime(3)
+  update_at  DateTime   @updatedAt @db.DateTime(3)
+  article    article[]
+  github     String?    @db.VarChar(50)
+  email      String?    @unique @db.VarChar(50)
+  qq         String?    @db.VarChar(25)
+  wechat     String?    @db.VarChar(25)
+  phone      String?    @unique @db.VarChar(25)
+  signature  String?    @db.VarChar(100)
+  categories category[]
+  avatars    avatar[]
+  comment    comment[]
+}
+
+model avatar {
+  id        Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId    Int      @unique @db.UnsignedInt
+  user      user     @relation(fields: [userId], references: [id])
+  avatar    String   @db.VarChar(100)
+  mimeType  String   @db.VarChar(15)
+  size      Int
+  create_at DateTime @default(now()) @db.DateTime(3)
+  update_at DateTime @updatedAt @db.DateTime(3)
+}
+
+model article {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  title      String
+  content    String    @db.Text
+  user       user      @relation(fields: [userId], references: [id])
+  userId     Int       @db.UnsignedInt
+  create_at  DateTime  @default(now()) @db.DateTime(3)
+  update_at  DateTime  @updatedAt @db.DateTime(3)
+  category   category  @relation(fields: [categoryId], references: [id])
+  categoryId Int       @db.UnsignedInt
+  comment    comment[]
+}
+
+model comment {
+  id         Int       @id @default(autoincrement()) @db.UnsignedInt
+  article_id Int       @db.UnsignedInt
+  article    article   @relation(fields: [article_id], references: [id])
+  user_id    Int?      @db.UnsignedInt
+  user       user?     @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  support    Int       @db.UnsignedInt
+  comment_id Int?      @db.UnsignedInt
+  comment    comment?  @relation("comment", fields: [comment_id], references: [id])
+  comments   comment[] @relation("comment")
+  create_at  DateTime  @default(now()) @db.DateTime(3)
+  update_at  DateTime  @updatedAt @db.DateTime(3)
+}
+
+model category {
+  id        Int       @id @default(autoincrement()) @db.UnsignedInt
+  title     String    @unique @db.VarChar(30)
+  articles  article[]
+  create_at DateTime  @default(now()) @db.DateTime(3)
+  update_at DateTime  @updatedAt @db.DateTime(3)
+  user      user      @relation(fields: [userId], references: [id])
+  userId    Int       @db.UnsignedInt
+}
+
+model role {
+  id        Int         @id @default(autoincrement()) @db.UnsignedInt
+  name      String      @unique @db.VarChar(50)
+  intro     String      @db.VarChar(100)
+  create_at DateTime    @default(now()) @db.DateTime(3)
+  update_at DateTime    @updatedAt @db.DateTime(3)
+  user      user[]
+  role_menu role_menu[]
+}
+
+model menu {
+  id         Int         @id @default(autoincrement()) @db.UnsignedInt
+  name       String      @db.VarChar(20)
+  type       Int         @db.TinyInt
+  icon       String?     @db.VarChar(30)
+  url        String?     @unique @db.VarChar(50)
+  permission String?     @unique @db.VarChar(100)
+  sort       Int         @default(100)
+  create_at  DateTime    @default(now()) @db.DateTime(3)
+  update_at  DateTime    @updatedAt @db.DateTime(3)
+  role_menu  role_menu[]
+  parentId   Int?        @db.UnsignedInt
+  parent_id  menu?       @relation("menu_id", fields: [parentId], references: [id])
+  children   menu[]      @relation("menu_id")
+}
+
+model role_menu {
+  roleId    Int      @db.UnsignedInt
+  role      role     @relation(fields: [roleId], references: [id])
+  menuId    Int      @db.UnsignedInt
+  menu      menu     @relation(fields: [menuId], references: [id])
+  create_at DateTime @default(now()) @db.DateTime(3)
+
+  @@id([menuId, roleId])
 }

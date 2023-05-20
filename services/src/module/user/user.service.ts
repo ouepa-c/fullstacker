@@ -6,6 +6,7 @@ import { fullfill } from '../../common/interceptor/transform.interceptor'
 import { hash, verify } from 'argon2'
 import dtoNonPrimarykey from '../../utils/dto.non-primarykey'
 import { AuthService } from '../auth/auth.service'
+import LoginUserDto from './dto/login-user.dto'
 
 const userinfo_response = {
   id: true,
@@ -27,7 +28,7 @@ export class UserService {
   ) {
   }
 
-  async create(createUserDto: CreateUserDto) {
+  async register(createUserDto: CreateUserDto) {
     try {
       const {password: originPsw, ...rest} = dtoNonPrimarykey(createUserDto, 'id')
       const password = await hash(originPsw)
@@ -42,10 +43,7 @@ export class UserService {
       })
       const token = await this.authService.awardToken({
         userId: user.id,
-        roleId: user.roleId,
-        username: user.username,
-        phone: user.phone,
-        email: user.email
+        roleId: user.roleId
       })
       return fullfill({
         msg: '用户注册成功',
@@ -60,12 +58,33 @@ export class UserService {
     }
   }
 
-  findAll() {
-    return `This action returns all user`
+  async findAll(page: number, size: number) {
+    const users = await this.prisma.user.findMany({
+      skip: (page - 1) * size,
+      take: size,
+      select: {
+        ...userinfo_response,
+        role: {
+          select: {id: true, name: true, intro: true}
+        }
+      }
+    })
+    return fullfill({
+      data: users
+    })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {id},
+      select: {
+        ...userinfo_response
+      }
+    })
+    return fullfill({
+      msg: '查询成功',
+      data: user
+    })
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
@@ -99,7 +118,47 @@ export class UserService {
     })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`
+  async signIn(loginUserDto: LoginUserDto) {
+    const {username, password} = loginUserDto
+    const userinfo = await this.prisma.user.findUnique({
+      where: {username},
+      select: {
+        password: true,
+        id: true,
+        roleId: true
+      }
+    })
+    // 未注册直接注册
+    if (!userinfo) {
+      return this.register(loginUserDto as CreateUserDto)
+    }
+    const verify_user = await verify(userinfo.password, password)
+    if (verify_user) {
+      const token = await this.authService.awardToken({
+        userId: userinfo.id,
+        roleId: userinfo.roleId
+      })
+      return fullfill({
+        msg: '登录成功',
+        data: {token}
+      })
+    } else {
+      throw new BadRequestException('登陆失败', '密码错误')
+    }
+  }
+
+  async remove(id: number) {
+    const user_profile = await this.prisma.user.delete({
+      where: {
+        id
+      },
+      select: {
+        ...userinfo_response
+      }
+    })
+    return fullfill({
+      msg: '删除成功',
+      data: user_profile
+    })
   }
 }

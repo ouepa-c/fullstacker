@@ -1,4 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query
+} from '@nestjs/common'
 import { UserService } from './user.service'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -8,32 +19,36 @@ import LoginUserDto from './dto/login-user.dto'
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {
+  constructor(
+    private readonly userService: UserService
+  ) {
   }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  register(@Body() createUserDto: CreateUserDto) {
     // 不允许传递头像
     createUserDto.avatar && delete createUserDto.avatar
-    return this.userService.create(createUserDto)
+    return this.userService.register(createUserDto)
   }
 
-  // todo 登录，未注册即注册后登录
-  @Post('login')
-  login(
+  @Post('signin')
+  signIn(
     @Body() loginUserDto: LoginUserDto
   ) {
-
+    return this.userService.signIn(loginUserDto)
   }
 
   @Get()
-  findAll() {
-    return this.userService.findAll()
+  findAll(
+    @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number
+  ) {
+    return this.userService.findAll(page, size)
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id)
+  findOne(@Param('id', VerifyUserExistPipe) id: number) {
+    return this.userService.findOne(id)
   }
 
   @Patch(':id')
@@ -45,7 +60,7 @@ export class UserController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id)
+  remove(@Param('id', VerifyUserExistPipe) id: number) {
+    return this.userService.remove(id)
   }
 }

@@ -4,9 +4,6 @@ import { JwtService } from '@nestjs/jwt'
 interface SignPayload {
   userId: number
   roleId: number
-  username: string
-  phone: string
-  email: string
 }
 
 @Injectable()

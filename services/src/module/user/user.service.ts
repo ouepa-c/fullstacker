@@ -4,7 +4,6 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { PrismaService } from 'nestjs-prisma'
 import { fullfill } from '../../common/interceptor/transform.interceptor'
 import { hash, verify } from 'argon2'
-import dtoNonPrimarykey from '../../utils/dto.non-primarykey'
 import { AuthService } from '../auth/auth.service'
 import LoginUserDto from './dto/login-user.dto'
 
@@ -30,12 +29,13 @@ export class UserService {
 
   async register(createUserDto: CreateUserDto) {
     try {
-      const {password: originPsw, ...rest} = dtoNonPrimarykey(createUserDto, 'id')
+      const {password: originPsw, roleId, ...rest} = createUserDto
       const password = await hash(originPsw)
       const user = await this.prisma.user.create({
         data: {
           ...rest,
-          password
+          password,
+          roleId: roleId || 3
         },
         select: {
           ...userinfo_response
@@ -53,7 +53,6 @@ export class UserService {
         }
       })
     } catch (e) {
-      console.log(e)
       throw new BadRequestException('userAlreadyExists', '用户已被注册，请检查邮箱或手机号')
     }
   }
@@ -70,7 +69,10 @@ export class UserService {
       }
     })
     return fullfill({
-      data: users
+      data: {
+        meta: {page, size},
+        users
+      }
     })
   }
 
@@ -81,14 +83,14 @@ export class UserService {
         ...userinfo_response
       }
     })
-    return fullfill({
+    return fullfill<Record<keyof typeof userinfo_response, any>>({
       msg: '查询成功',
       data: user
     })
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const {password, ...rest} = dtoNonPrimarykey(updateUserDto, 'id')
+    const {password, roleId, ...rest} = updateUserDto
     if (password) {
       let encryption: string = void 0
       const {password: originPassword} = await this.prisma.user.findUnique({where: {id}, select: {password: true}})
@@ -123,9 +125,8 @@ export class UserService {
     const userinfo = await this.prisma.user.findUnique({
       where: {username},
       select: {
-        password: true,
-        id: true,
-        roleId: true
+        ...userinfo_response,
+        password: true
       }
     })
     // 未注册直接注册
@@ -138,9 +139,13 @@ export class UserService {
         userId: userinfo.id,
         roleId: userinfo.roleId
       })
+      const {password, ...rest} = userinfo
       return fullfill({
         msg: '登录成功',
-        data: {token}
+        data: {
+          user: rest,
+          token
+        }
       })
     } else {
       throw new BadRequestException('登陆失败', '密码错误')

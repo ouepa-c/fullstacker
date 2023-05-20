@@ -5,6 +5,6 @@ import HttpExceptionFilter from './common/filter/http-exception.filter'
 
 export default (app: NestExpressApplication) => {
   app.useGlobalInterceptors(new TransformInterceptor)
-    .useGlobalPipes(new ValidationPipe)
+    .useGlobalPipes(new ValidationPipe({whitelist: true}))
     .useGlobalFilters(new HttpExceptionFilter)
 }

@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
+import { PrismaService } from 'nestjs-prisma'
 
-interface SignPayload {
+export interface SignPayload {
   userId: number
   roleId: number
 }
@@ -9,7 +10,8 @@ interface SignPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwt: JwtService
+    private readonly jwt: JwtService,
+    private readonly prisma: PrismaService
   ) {
   }
 
@@ -18,6 +20,10 @@ export class AuthService {
   }
 
   verifyToken(token: string) {
-    return this.jwt.verifyAsync<SignPayload>(token)
+    try {
+      return this.jwt.verifyAsync<SignPayload>(token)
+    } catch (err) {
+      throw new BadRequestException('no authorization token')
+    }
   }
 }

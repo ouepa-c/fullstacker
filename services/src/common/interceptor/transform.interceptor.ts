@@ -21,9 +21,9 @@ export default class TransformInterceptor implements NestInterceptor {
   }
 }
 
-export const fullfill = ({
+export const fullfill = <D>({
   msg, data
-}: Result) => ({
+}: Result<D>) => ({
   msg,
   data
 })

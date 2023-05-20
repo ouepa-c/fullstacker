@@ -4,6 +4,8 @@ import CreateRoleDto from './dto/create-role.dto'
 import UpdateRoleDto from './dto/update-role.dto'
 import VerifyRoleExistPipe from './pipe/verify-role-exist.pipe'
 import dtoNonEmpty from '../../utils/dto.non-empty'
+import Auth from '../../common/guard/auth.guard'
+import { Roles } from '../../../enum/global'
 
 @Controller('role')
 export class RoleController {
@@ -18,11 +20,13 @@ export class RoleController {
   }
 
   @Post()
+  @Auth(Roles.SUPER_ADMIN)
   create(@Body() roledto: CreateRoleDto) {
     return this.roleService.create(roledto)
   }
 
   @Patch(':id')
+  @Auth(Roles.SUPER_ADMIN)
   update(
     @Body() roledto: UpdateRoleDto,
     @Param('id', VerifyRoleExistPipe) id: number
@@ -32,6 +36,7 @@ export class RoleController {
   }
 
   @Delete(':id')
+  @Auth(Roles.SUPER_ADMIN)
   remove(
     @Param('id', VerifyRoleExistPipe) id: number
   ) {

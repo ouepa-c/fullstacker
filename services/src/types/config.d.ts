@@ -1,4 +1,4 @@
-type Result = {
+type Result<D = any> = {
   msg?: string
-  data?: any
+  data?: D
 }

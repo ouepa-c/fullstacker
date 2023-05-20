@@ -1,26 +1,80 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable } from '@nestjs/common'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { UpdateCategoryDto } from './dto/update-category.dto'
+import { PrismaService } from 'nestjs-prisma'
+import { SignPayload } from '../auth/auth.service'
+import { fullfill } from '../../common/interceptor/transform.interceptor'
+
+const category_select = {
+  id: true,
+  title: true,
+  desc: true,
+  create_at: true,
+  userId: true
+}
 
 @Injectable()
 export class CategoryService {
-  create(createCategoryDto: CreateCategoryDto) {
-    return 'This action adds a new category'
+  constructor(
+    private readonly prisma: PrismaService
+  ) {
   }
 
-  findAll() {
-    return `This action returns all category`
+  async create(createCategoryDto: CreateCategoryDto, {userId}: SignPayload) {
+    const cate = await this.prisma.category.create({
+      data: {
+        ...createCategoryDto,
+        userId
+      },
+      select: {
+        ...category_select
+      }
+    }).catch(() => {
+      throw new BadRequestException('栏目已存在')
+    })
+    return fullfill({
+      msg: '栏目创建成功',
+      data: cate
+    })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`
+  async findAll() {
+    const categories = await this.prisma.category.findMany({
+      select: {...category_select}
+    })
+    return fullfill({
+      data: categories
+    })
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`
+  async findOne(id: number) {
+    const res = await this.prisma.category.findUnique({
+      where: {id},
+      select: {...category_select}
+    })
+    return fullfill<Record<keyof typeof category_select, any>>({
+      data: res
+    })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`
+  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
+    const category = await this.prisma.category.update({
+      where: {id},
+      data: {...updateCategoryDto},
+      select: {...category_select}
+    })
+    return fullfill({
+      msg: '更新成功',
+      data: category
+    })
+  }
+
+  async remove(id: number) {
+    await this.prisma.category.delete({
+      where: {id}
+    })
+    return fullfill({
+      msg: '删除成功'
+    })
   }
 }

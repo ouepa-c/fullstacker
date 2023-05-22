@@ -12,7 +12,7 @@ dotenv.config({
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule)
   appSetup(app)
-  await app.listen(process.env.APP_PORT)
+  await app.listen(+process.env.APP_PORT)
 }
 
 bootstrap()

@@ -1,22 +1,24 @@
-import { Body, Controller, Delete, ForbiddenException, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
 import { CategoryService } from './category.service'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { UpdateCategoryDto } from './dto/update-category.dto'
 import { Request } from 'express'
 import type { SignPayload } from '../auth/auth.service'
+import { AuthService } from '../auth/auth.service'
 import dtoNonEmpty from '../../utils/dto.non-empty'
 import UserProfileByTokenGuard from '../../common/guard/userProfile-byToken.guard'
 import { UserService } from '../user/user.service'
 import { PrismaService } from 'nestjs-prisma'
 import VerifyCategoryExistPipe from './pipe/verify-category-exist.pipe'
-import { permissionMap } from '../role/constants'
+import VerifyUserExistPipe from '../user/pipe/verify-user-exist.pipe'
 
 @Controller('category')
 export class CategoryController {
   constructor(
     private readonly categoryService: CategoryService,
     private readonly userService: UserService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly authService: AuthService
   ) {
   }
 
@@ -32,18 +34,25 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto, req.user as SignPayload)
   }
 
+  /**
+   * @description 获取分类列表
+   * */
   @Get()
   findAll() {
     return this.categoryService.findAll()
   }
 
+  /**
+   * @description 获取单个栏目信息
+   * */
   @Get(':id')
   findOne(@Param('id', VerifyCategoryExistPipe) id: number) {
     return this.categoryService.findOne(id)
   }
 
   /**
-   * @description 用户可以更新自己的栏目，超管和区域管理可以更新所有栏目
+   * @description 栏目更新
+   * @desc 用户可以更新自己的栏目，超管和区域管理可以更新所有栏目
    * */
   @Patch(':id')
   @UseGuards(UserProfileByTokenGuard)
@@ -53,11 +62,12 @@ export class CategoryController {
     @Req() req: Request
   ) {
     dtoNonEmpty(updateCategoryDto)
-    return this.updateAndDeleteCategoryAuthentication(
+    const {data: {userId}} = await this.categoryService.findOne(id)
+    await this.userService.roleAuthentication(
       req.user as SignPayload,
-      id,
-      this.categoryService.update(id, updateCategoryDto)
+      userId
     )
+    return this.categoryService.update(id, updateCategoryDto)
   }
 
   /**
@@ -65,42 +75,25 @@ export class CategoryController {
    * */
   @Delete(':id')
   @UseGuards(UserProfileByTokenGuard)
-  remove(
+  async remove(
     @Param('id', VerifyCategoryExistPipe) id: number,
     @Req() req: Request
   ) {
-    return this.updateAndDeleteCategoryAuthentication(
+    const {data: {userId}} = await this.categoryService.findOne(id)
+    await this.userService.roleAuthentication(
       req.user as SignPayload,
-      id,
-      this.categoryService.remove(id)
+      userId
     )
+    return this.categoryService.remove(id)
   }
 
-  async updateAndDeleteCategoryAuthentication(
-    user: SignPayload,
-    categoryId: number,
-    returns: Promise<any>
+  /**
+   * @description 获取某个用户的栏目列表
+   * */
+  @Get('user/:id')
+  getListOfCategoriesForAUser(
+    @Param('id', VerifyUserExistPipe) id: number
   ) {
-    const {
-      roleId: sourceRoleId,
-      userId: sourceUserId
-    } = user
-
-    const {data: {userId}} = await this.categoryService.findOne(categoryId)
-
-    // 如果非本人操作，角色鉴权
-    if (userId !== sourceUserId) {
-      const {data: {roleId}} = await this.userService.findOne(userId)
-      // 角色不一致
-      const has_permission = permissionMap[sourceRoleId].includes(roleId)
-      if (!has_permission) {
-        // 没有权限
-        throw  new ForbiddenException()
-      } else {
-        return await returns
-      }
-    } else {
-      return await returns
-    }
+    return this.categoryService.getListOfCategoriesForAUser(id)
   }
 }

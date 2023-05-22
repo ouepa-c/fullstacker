@@ -1,11 +1,18 @@
-import { BadRequestException, Injectable, MethodNotAllowedException, UnauthorizedException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  MethodNotAllowedException,
+  UnauthorizedException
+} from '@nestjs/common'
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto'
 import { PrismaService } from 'nestjs-prisma'
 import { fullfill } from '../../common/interceptor/transform.interceptor'
 import { hash, verify } from 'argon2'
-import { AuthService } from '../auth/auth.service'
+import { AuthService, SignPayload } from '../auth/auth.service'
 import LoginUserDto from './dto/login-user.dto'
+import { permissionMap } from '../role/constants'
 
 const userinfo_response = {
   id: true,
@@ -178,6 +185,20 @@ export class UserService {
         avatar: true
       }
     })
+  }
 
+  async roleAuthentication(user: SignPayload, userSign: number) {
+    const {
+      userId: sourceUserId,
+      roleId: sourceRoleId
+    } = user
+    if (sourceUserId === userSign) return
+    // 非本人操作，进行角色鉴权
+    const {data: {roleId}} = await this.findOne(userSign)
+    const has_permission = permissionMap[sourceRoleId].includes(roleId)
+    if (!has_permission) {
+      // 没有权限
+      throw  new ForbiddenException()
+    } else return
   }
 }

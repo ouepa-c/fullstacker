@@ -1,6 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { PrismaService } from 'nestjs-prisma'
 
 export interface SignPayload {
   userId: number
@@ -10,8 +9,7 @@ export interface SignPayload {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly jwt: JwtService,
-    private readonly prisma: PrismaService
+    private readonly jwt: JwtService
   ) {
   }
 
@@ -23,7 +21,7 @@ export class AuthService {
     try {
       return this.jwt.verifyAsync<SignPayload>(token)
     } catch (err) {
-      throw new BadRequestException('no authorization token')
+      throw new UnauthorizedException('登录过期，请重新登录')
     }
   }
 }

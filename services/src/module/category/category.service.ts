@@ -62,6 +62,8 @@ export class CategoryService {
       where: {id},
       data: {...updateCategoryDto},
       select: {...category_select}
+    }).catch(() => {
+      throw new BadRequestException('该栏目名称已被占用')
     })
     return fullfill({
       msg: '更新成功',
@@ -75,6 +77,23 @@ export class CategoryService {
     })
     return fullfill({
       msg: '删除成功'
+    })
+  }
+
+  async getListOfCategoriesForAUser(userId: number) {
+    const categories = await this.prisma.category.findMany({
+      where: {
+        userId
+      },
+      select: {
+        id: true,
+        title: true,
+        desc: true,
+        create_at: true
+      }
+    })
+    return fullfill({
+      data: categories
     })
   }
 }

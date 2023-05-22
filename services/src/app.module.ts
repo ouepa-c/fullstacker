@@ -27,8 +27,8 @@ dotenv.config({
       isGlobal: true,
       load: [...config]
     }),
-    UserModule,
     RoleModule,
+    UserModule,
     AuthModule,
     CategoryModule,
     ArticleModule,

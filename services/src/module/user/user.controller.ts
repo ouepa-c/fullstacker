@@ -11,6 +11,7 @@ import {
   Post,
   Query,
   Req,
+  Res,
   UseGuards
 } from '@nestjs/common'
 import { UserService } from './user.service'
@@ -21,14 +22,14 @@ import LoginUserDto from './dto/login-user.dto'
 import UserProfileByTokenGuard from '../../common/guard/userProfile-byToken.guard'
 import type { SignPayload } from '../auth/auth.service'
 import { Roles } from '../../../enum/global'
-import { PrismaService } from 'nestjs-prisma'
 import VerifyUserExistPipe from './pipe/verify-user-exist.pipe'
+import { Response } from 'express'
+import * as path from 'path'
 
 @Controller('user')
 export class UserController {
   constructor(
-    private readonly userService: UserService,
-    private readonly prisma: PrismaService
+    private readonly userService: UserService
   ) {
   }
 
@@ -72,7 +73,7 @@ export class UserController {
   }
 
   /**
-   * @description 用户更新信息，用户不可以更新自己的roleId
+   * @description 用户更新信息，除了超管用户不可以更新自己的roleId
    * */
   @Patch(':id')
   @UseGuards(UserProfileByTokenGuard)
@@ -82,8 +83,8 @@ export class UserController {
     @Req() req
   ) {
     dtoNonEmpty(updateUserDto)
-    this.updateAndRemoveIdentification(req.user, id)
-    return this.userService.update(id, updateUserDto)
+    const isSuper = this.updateAndRemoveIdentification(req.user, id)
+    return this.userService.update(id, updateUserDto, isSuper)
   }
 
   /**
@@ -99,13 +100,31 @@ export class UserController {
     return this.userService.remove(id)
   }
 
+  @Get('avatar/:userId')
+  async avatarPreview(
+    @Param('userId', VerifyUserExistPipe) id: number,
+    @Res() res: Response
+  ) {
+    const avatar = await this.userService.getAvatarPreview(id)
+    // 默认头像
+    if (!avatar) {
+      return res.sendFile(
+        path.join(__dirname, '../../../static/user_avatar/normal.jpg')
+      )
+    }
+    const {avatar: user_avatar} = avatar
+    return res.sendFile(
+      path.join(__dirname, `../../../static/user_avatar/${user_avatar}`)
+    )
+  }
+
   updateAndRemoveIdentification(user: SignPayload, sign: number) {
     // 超管具备所有权限
-    if (user.roleId === Roles.SUPER_ADMIN) return
+    if (user.roleId === Roles.SUPER_ADMIN) return true
     // 修改的是不是自己的信息
     if (user.userId !== sign) {
       throw new ForbiddenException()
     }
-    return void 0
+    return false
   }
 }

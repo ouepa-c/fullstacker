@@ -15,6 +15,7 @@ const userinfo_response = {
   qq: true,
   wechat: true,
   phone: true,
+  avatar: true,
   roleId: true,
   create_at: true
 }
@@ -89,7 +90,7 @@ export class UserService {
     })
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto, isSuper: boolean) {
     const {password, roleId, ...rest} = updateUserDto
     if (password) {
       let encryption: string = void 0
@@ -103,7 +104,8 @@ export class UserService {
         where: {id},
         data: {
           ...rest,
-          password: encryption
+          password: encryption,
+          roleId: isSuper ? roleId : void 0
         }
       })
       // 更新了密码前端需要重新登录  使用code 401 判断
@@ -165,5 +167,17 @@ export class UserService {
       msg: '删除成功',
       data: user_profile
     })
+  }
+
+  getAvatarPreview(userId: number) {
+    return this.prisma.avatar.findUnique({
+      where: {
+        userId
+      },
+      select: {
+        avatar: true
+      }
+    })
+
   }
 }

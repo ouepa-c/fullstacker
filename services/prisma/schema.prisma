@@ -32,14 +32,15 @@ model user {
 }
 
 model avatar {
-  id        Int      @id @default(autoincrement()) @db.UnsignedInt
-  userId    Int      @unique @db.UnsignedInt
-  user      user     @relation(fields: [userId], references: [id])
-  avatar    String   @db.VarChar(100)
-  mimeType  String   @db.VarChar(15)
-  size      Int
-  create_at DateTime @default(now()) @db.DateTime(3)
-  update_at DateTime @updatedAt @db.DateTime(3)
+  id           Int      @id @default(autoincrement()) @db.UnsignedInt
+  userId       Int      @unique @db.UnsignedInt
+  user         user     @relation(fields: [userId], references: [id])
+  avatar       String   @db.VarChar(100)
+  mimeType     String   @db.VarChar(15)
+  size         Int
+  originalname String
+  create_at    DateTime @default(now()) @db.DateTime(3)
+  update_at    DateTime @updatedAt @db.DateTime(3)
 }
 
 model article {

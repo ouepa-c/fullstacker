@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
 import { ConfigModule } from '@nestjs/config'
 import * as dotenv from 'dotenv'
 import * as path from 'path'
@@ -13,6 +11,8 @@ import { ArticleModule } from './module/article/article.module'
 import { CommentsModule } from './module/comments/comments.module'
 import { MenuModule } from './module/menu/menu.module'
 import { PrismaModule } from 'nestjs-prisma'
+import { UploadModule } from './module/upload/upload.module'
+import { UploadController } from './module/upload/upload.controller'
 
 dotenv.config({
   path: path.join(__dirname, '../../.env')
@@ -33,10 +33,10 @@ dotenv.config({
     CategoryModule,
     ArticleModule,
     CommentsModule,
-    MenuModule
+    MenuModule,
+    UploadModule
   ],
-  controllers: [AppController],
-  providers: [AppService]
+  controllers: [UploadController]
 })
 export class AppModule {
 }

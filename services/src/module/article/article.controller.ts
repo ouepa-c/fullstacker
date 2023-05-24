@@ -1,9 +1,21 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards
+} from '@nestjs/common'
 import { ArticleService } from './article.service'
 import { CreateArticleDto } from './dto/create-article.dto'
 import UserProfileByTokenGuard from '../../common/guard/userProfile-byToken.guard'
 import { Request } from 'express'
-import type { SignPayload } from '../auth/auth.service'
 import { UpdateCategoryDto } from '../category/dto/update-category.dto'
 import dtoNonEmpty from '../../utils/dto.non-empty'
 import VerifyArticleExistPipe from './pipe/verify-article-exist.pipe'
@@ -51,18 +63,64 @@ export class ArticleController {
     return this.articleService.update(id, updateCateDto)
   }
 
+  /**
+   * @description 文章列表
+   * */
   @Get()
-  findAll() {
-    return this.articleService.findAll()
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number
+  ) {
+    return this.articleService.findAll(page, size)
   }
 
+  /**
+   * @description 获取指定的文章
+   * */
   @Get(':id')
   findOne(@Param('id', VerifyArticleExistPipe) id: number) {
-    return this.articleService.findOne(+id)
+    return this.articleService.findOne(id)
   }
 
+  /**
+   * @description 删除文章
+   * @desc 用户可以删除自己的文章  区域管理和超管可以删除所有人的文章
+   * */
   @Delete(':id')
-  remove(@Param('id', VerifyUserExistPipe) id: string) {
-    return this.articleService.remove(+id)
+  @UseGuards(UserProfileByTokenGuard)
+  async remove(
+    @Req() req: Request,
+    @Param('id', VerifyArticleExistPipe) id: number
+  ) {
+    const {data: {userId}} = await this.articleService.findOne(id)
+    await this.userService.roleAuthentication(
+      req.user as SignPayload,
+      userId
+    )
+    return this.articleService.remove(id)
+  }
+
+  /**
+   * @description 获取某个用户的文章列表
+   * */
+  @Get('user/:id')
+  findUserArticleList(
+    @Param('id', VerifyUserExistPipe) id: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('size', new DefaultValuePipe(10), ParseIntPipe) size: number
+  ) {
+    return this.articleService.findUserArticleList(id, page, size)
+  }
+
+  /**
+   * @description 获取某一篇文章的评论列表
+   * */
+  @Get('comments/:artId')
+  findCommentsByArtId(
+    @Param('artId', VerifyArticleExistPipe) artId: number,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('size', new DefaultValuePipe(20), ParseIntPipe) size: number
+  ) {
+    return this.articleService.getComments(artId, page, size)
   }
 }

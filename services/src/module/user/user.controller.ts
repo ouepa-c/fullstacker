@@ -20,11 +20,13 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import dtoNonEmpty from '../../utils/dto.non-empty'
 import LoginUserDto from './dto/login-user.dto'
 import UserProfileByTokenGuard from '../../common/guard/userProfile-byToken.guard'
-import type { SignPayload } from '../auth/auth.service'
 import { Roles } from '../../../enum/global'
 import VerifyUserExistPipe from './pipe/verify-user-exist.pipe'
 import { Response } from 'express'
 import * as path from 'path'
+import ModifyUserDto from './dto/modify-user.dto'
+import Auth from '../../common/guard/auth.guard'
+import VerifyModifyUserPipe from './pipe/verify-modify-user.pipe'
 
 @Controller('user')
 export class UserController {
@@ -116,6 +118,17 @@ export class UserController {
     return res.sendFile(
       path.join(__dirname, `../../../static/user_avatar/${user_avatar}`)
     )
+  }
+
+  /**
+   * @description 超级管理员修改用户角色权限
+   * */
+  @Post('role')
+  @Auth(Roles.SUPER_ADMIN)
+  userPermissionModification(
+    @Body(VerifyModifyUserPipe) modifyUserDto: ModifyUserDto
+  ) {
+    return this.userService.userPermissionModification(modifyUserDto)
   }
 
   updateAndRemoveIdentification(user: SignPayload, sign: number) {

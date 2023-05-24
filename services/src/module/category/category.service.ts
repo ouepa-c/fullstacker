@@ -2,7 +2,6 @@ import { BadRequestException, Injectable } from '@nestjs/common'
 import { CreateCategoryDto } from './dto/create-category.dto'
 import { UpdateCategoryDto } from './dto/update-category.dto'
 import { PrismaService } from 'nestjs-prisma'
-import { SignPayload } from '../auth/auth.service'
 import { fullfill } from '../../common/interceptor/transform.interceptor'
 
 const category_select = {
@@ -30,7 +29,7 @@ export class CategoryService {
         ...category_select
       }
     }).catch(() => {
-      throw new BadRequestException('栏目已存在')
+      throw new BadRequestException('not allowed', '栏目已存在')
     })
     return fullfill({
       msg: '栏目创建成功',
@@ -63,7 +62,7 @@ export class CategoryService {
       data: {...updateCategoryDto},
       select: {...category_select}
     }).catch(() => {
-      throw new BadRequestException('该栏目名称已被占用')
+      throw new BadRequestException('not allowed', '该栏目名称已被占用')
     })
     return fullfill({
       msg: '更新成功',

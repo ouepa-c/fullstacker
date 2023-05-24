@@ -2,7 +2,6 @@ import { applyDecorators, CanActivate, ExecutionContext, Injectable, SetMetadata
 import { Reflector } from '@nestjs/core'
 import type { Roles } from '../../../enum/global'
 import UserProfileByTokenGuard from './userProfile-byToken.guard'
-import type { SignPayload } from '../../module/auth/auth.service'
 import type { Response } from 'express'
 
 @Injectable()

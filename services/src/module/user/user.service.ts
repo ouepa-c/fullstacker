@@ -10,11 +10,12 @@ import { UpdateUserDto } from './dto/update-user.dto'
 import { PrismaService } from 'nestjs-prisma'
 import { fullfill } from '../../common/interceptor/transform.interceptor'
 import { hash, verify } from 'argon2'
-import { AuthService, SignPayload } from '../auth/auth.service'
+import { AuthService } from '../auth/auth.service'
 import LoginUserDto from './dto/login-user.dto'
 import { permissionMap } from '../role/constants'
+import type ModifyUserDto from './dto/modify-user.dto'
 
-const userinfo_response = {
+export const userinfo_response = {
   id: true,
   username: true,
   email: true,
@@ -43,7 +44,8 @@ export class UserService {
         data: {
           ...rest,
           password,
-          roleId: roleId || 3
+          roleId: 3,
+          comments_public: 1
         },
         select: {
           ...userinfo_response
@@ -104,7 +106,7 @@ export class UserService {
       const {password: originPassword} = await this.prisma.user.findUnique({where: {id}, select: {password: true}})
       const isSame = await verify(originPassword, password)
       if (isSame) {
-        throw new MethodNotAllowedException('密码和上一次一致')
+        throw new MethodNotAllowedException('failed', '密码和上一次一致')
       }
       encryption = await hash(password)
       await this.prisma.user.update({
@@ -200,5 +202,18 @@ export class UserService {
       // 没有权限
       throw  new ForbiddenException()
     } else return
+  }
+
+  async userPermissionModification(modifyUserDto: ModifyUserDto) {
+    const {userId, roleId} = modifyUserDto
+    await this.prisma.user.update({
+      where: {id: userId},
+      data: {
+        roleId
+      }
+    })
+    return fullfill({
+      msg: `尊敬的超级管理员，用户#${userId}权限更新成功`
+    })
   }
 }

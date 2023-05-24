@@ -1,11 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
-export interface SignPayload {
-  userId: number
-  roleId: number
-}
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,7 +16,7 @@ export class AuthService {
     try {
       return this.jwt.verifyAsync<SignPayload>(token)
     } catch (err) {
-      throw new UnauthorizedException('登录过期，请重新登录')
+      throw new UnauthorizedException('no authorization', '登录过期，请重新登录')
     }
   }
 }

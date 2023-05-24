@@ -2,6 +2,10 @@ import { IsEmail, IsNumber, IsOptional, IsString, Length } from 'class-validator
 import { Exclude } from 'class-transformer'
 
 export class CreateUserDto {
+  @IsOptional()
+  @IsString()
+  readonly nickname: string
+
   @IsString()
   @Length(4, 12, {
     message: '请输入用户名4-12位'

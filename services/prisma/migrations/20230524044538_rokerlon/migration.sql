@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `cmts_comments` MODIFY `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT;

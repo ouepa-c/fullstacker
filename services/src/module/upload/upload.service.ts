@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import type { SignPayload } from '../auth/auth.service'
 import { PrismaService } from 'nestjs-prisma'
 import * as fs from 'fs'
 import * as path from 'path'

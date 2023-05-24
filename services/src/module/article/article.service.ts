@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common'
 import { CreateArticleDto } from './dto/create-article.dto'
 import { UpdateArticleDto } from './dto/update-article.dto'
-import type { SignPayload } from '../auth/auth.service'
 import { PrismaService } from 'nestjs-prisma'
 import { fullfill } from '../../common/interceptor/transform.interceptor'
+import { userinfo_response } from '../user/user.service'
 
-const article_select = {
+export const article_select = {
   id: true,
   title: true,
   category: {
@@ -29,6 +29,13 @@ export class ArticleService {
 
   async create(createArticleDto: CreateArticleDto, user: SignPayload) {
     const {userId} = user
+    const existingArticle = await this.prisma.article.findMany({
+      where: {title: createArticleDto.title, userId},
+      select: {id: true}
+    })
+    if (existingArticle.length) {
+      throw new BadRequestException('not allowed', '你已经有该标题的文章了，换一个吧')
+    }
     const art = await this.prisma.article.create({
       data: {
         ...createArticleDto,
@@ -37,8 +44,6 @@ export class ArticleService {
       select: {
         ...article_select
       }
-    }).catch(() => {
-      throw new BadRequestException('标题重复', '请检查标题')
     })
 
     return fullfill({
@@ -47,8 +52,18 @@ export class ArticleService {
     })
   }
 
-  findAll() {
-    return `This action returns all article`
+  async findAll(page: number, size: number) {
+    const arts = await this.prisma.article.findMany({
+      skip: (page - 1),
+      take: size,
+      select: {
+        ...article_select,
+        content: true
+      }
+    })
+    return fullfill({
+      data: arts
+    })
   }
 
   async findOne(id: number) {
@@ -75,7 +90,63 @@ export class ArticleService {
     })
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} article`
+  async remove(id: number) {
+    const art = await this.prisma.article.delete({
+      where: {id},
+      select: {...article_select}
+    })
+    return fullfill({
+      msg: '删除成功',
+      data: art
+    })
+  }
+
+  async findUserArticleList(userId: number, page: number, size: number) {
+    const arts = await this.prisma.article.findMany({
+      where: {userId},
+      skip: (page - 1) * size,
+      take: size,
+      select: {
+        ...article_select,
+        content: true
+      }
+    })
+    return fullfill({
+      data: arts
+    })
+  }
+
+  async getComments(artId: number, page: number, size: number) {
+    const comments = await this.prisma.art_comment.findMany({
+      where: {
+        article_id: artId
+      },
+      skip: (page - 1) * size,
+      take: size,
+      select: {
+        id: true,
+        article_id: true,
+        content: true,
+        create_at: true,
+        user: {
+          select: {...userinfo_response}
+        },
+        comments: {
+          select: {
+            id: true,
+            content: true,
+            create_at: true,
+            user: {
+              select: {
+                ...userinfo_response
+              }
+            }
+          }
+        }
+      }
+    })
+    return fullfill({
+      data: comments
+    })
   }
 }

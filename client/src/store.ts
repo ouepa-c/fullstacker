@@ -3,13 +3,16 @@ import { persistReducer, persistStore } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
 import { FLUSH, PAUSE, PERSIST, PURGE, REGISTER, REHYDRATE } from 'redux-persist/es/constants'
 import home from 'pages/home/store/index'
+import profile from 'pages/profile/store/index'
 
 const root_reducer = combineReducers({
-  home
+  home,
+  profile
 })
 const reducer = persistReducer({
   key: 'root',
-  storage
+  storage,
+  whitelist: ['profile']
 }, root_reducer)
 
 const store = configureStore({

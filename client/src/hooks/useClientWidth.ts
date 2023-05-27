@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
 const useClientWidth = () => {
-  const [clientW, setClientW] = useState<number>(0)
+  const init = document.body.clientWidth
+  const [clientW, setClientW] = useState<number>(init)
 
   function docResizeHandler(e: UIEvent) {
     setClientW(document.body.clientWidth)

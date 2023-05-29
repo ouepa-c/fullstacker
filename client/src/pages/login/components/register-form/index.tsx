@@ -1,12 +1,12 @@
 import React, { type ReactNode, useEffect, useRef, useState } from 'react'
-import _ from 'classnames'
-import { Button, Input, Loading, Tooltip } from '@nextui-org/react'
+import { Button, Input, Loading } from '@nextui-org/react'
 import ArrowDown from 'assets/svg/arrow-down'
 import useIntersectionObserver from '@/hooks/useIntersectionObserver'
 import useFieldValidate from '@/hooks/useFieldValidate'
 import { FieldTypes } from '@/utils/form-validate'
-import { message } from 'antd'
+import { message, Tooltip } from 'antd'
 import useFormChange from '@/hooks/useFormChange'
+import _ from 'classnames'
 
 export interface RegisterFormProps {
   children?: ReactNode
@@ -81,7 +81,7 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
   }
 
   return (
-    <div className={_('register-bar', isLogin ? 'hide' : 'show')}>
+    <div className={_('register-bar', isLogin ? '' : 'fade')}>
       <h2 className="title">
         SIGN UP
       </h2>
@@ -186,7 +186,7 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             : 'Sign up!'
           }
         </Button>
-        <Tooltip content="已有账号?去登陆" color="invert" placement="right">
+        <Tooltip title="已有账号?去登陆" placement="right">
           <Button
             light rounded
             onPress={changeStatus}

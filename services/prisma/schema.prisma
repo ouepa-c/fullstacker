@@ -54,8 +54,8 @@ model article {
   userId     Int?          @db.UnsignedInt
   create_at  DateTime      @default(now()) @db.DateTime(3)
   update_at  DateTime      @updatedAt @db.DateTime(3)
-  category   category      @relation(fields: [categoryId], references: [id])
-  categoryId Int           @db.UnsignedInt
+  category   category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId Int?          @db.UnsignedInt
   comment    art_comment[]
 }
 
@@ -64,7 +64,7 @@ model art_comment {
   id         Int             @id @default(autoincrement()) @db.UnsignedInt
   content    String
   article_id Int             @db.UnsignedInt
-  article    article         @relation(fields: [article_id], references: [id])
+  article    article         @relation(fields: [article_id], references: [id], onDelete: Cascade)
   user_id    Int?            @db.UnsignedInt
   user       user?           @relation(fields: [user_id], references: [id], onUpdate: Cascade, onDelete: SetNull)
   support    Int             @db.UnsignedInt

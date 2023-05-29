@@ -38,34 +38,32 @@ export class UserService {
   }
 
   async register(createUserDto: CreateUserDto) {
-    try {
-      const {password: originPsw, roleId, ...rest} = createUserDto
-      const password = await hash(originPsw)
-      const user = await this.prisma.user.create({
-        data: {
-          ...rest,
-          password,
-          roleId: 3,
-          comments_public: 1
-        },
-        select: {
-          ...userinfo_response
-        }
-      })
-      const token = await this.authService.awardToken({
-        userId: user.id,
-        roleId: user.roleId
-      })
-      return fullfill({
-        msg: '用户注册成功',
-        data: {
-          user,
-          token
-        }
-      })
-    } catch (e) {
+    const {password: originPsw, roleId, ...rest} = createUserDto
+    const password = await hash(originPsw)
+    const user = await this.prisma.user.create({
+      data: {
+        ...rest,
+        password,
+        roleId: 3,
+        comments_public: 1
+      },
+      select: {
+        ...userinfo_response
+      }
+    }).catch((e) => {
       throw new BadRequestException('userAlreadyExists', '用户名已被注册')
-    }
+    })
+    const token = await this.authService.awardToken({
+      userId: user.id,
+      roleId: user.roleId
+    })
+    return fullfill({
+      msg: '用户注册成功',
+      data: {
+        user,
+        token
+      }
+    })
   }
 
   async findAll(page: number, size: number) {

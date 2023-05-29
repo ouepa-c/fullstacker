@@ -1,10 +1,10 @@
 import React, { type ReactNode, useEffect } from 'react'
-import _ from 'classnames'
-import { Button, Input, Link, Loading, Tooltip } from '@nextui-org/react'
+import { Button, Input, Link, Loading } from '@nextui-org/react'
 import { FieldTypes } from '@/utils/form-validate'
 import useFieldValidate from '@/hooks/useFieldValidate'
-import { message } from 'antd'
+import { message, Tooltip } from 'antd'
 import useFormChange from '@/hooks/useFormChange'
+import _ from 'classnames'
 
 export interface LoginFormProps {
   children?: ReactNode
@@ -51,7 +51,7 @@ const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
   }
 
   return (
-    <div className={_('login-bar', !isLogin ? 'hide' : 'show')}>
+    <div className={_('login-bar', isLogin ? 'fade' : '')}>
       <h2 className="title">
         SIGN IN
       </h2>
@@ -83,14 +83,14 @@ const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
         </div>
         <div className="form-item">
           <Button
-            shadow rounded size="sm" color="success" onPress={handleLogin}
+            shadow rounded size="sm" color="gradient" onPress={handleLogin}
           >
             {isLoading
               ? <Loading type="points-opacity" color="white"/>
               : 'Sign in'
             }
           </Button>
-          <Tooltip content="没有账号，现在去注册" placement="rightEnd" color="invert">
+          <Tooltip title="没有账号，现在去注册" placement="right">
             <Button
               light rounded
               onPress={changeStatus}

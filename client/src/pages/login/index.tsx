@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/app'
 import { changeIsLoading, changeIsLogin, fetchUserProfile } from 'pages/profile/store'
 import { shallowEqual } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import _ from 'classnames'
 
 export interface LoginProps {
   children?: ReactNode
@@ -38,18 +39,20 @@ const Login: React.FC<LoginProps> = (props) => {
   return (
     <LoginWrapper>
       <LoginContainer>
-        <LoginForm
-          isLogin={isLogin}
-          isLoading={isLoading}
-          submit={submit}
-          changeStatus={changeStatus}
-        />
-        <RegisterForm
-          isLogin={isLogin}
-          isLoading={isLoading}
-          submit={submit}
-          changeStatus={changeStatus}
-        />
+        <div className={_('login-wrapper', isLogin ? 'trans' : '')}>
+          <LoginForm
+            isLogin={isLogin}
+            isLoading={isLoading}
+            submit={submit}
+            changeStatus={changeStatus}
+          />
+          <RegisterForm
+            isLogin={isLogin}
+            isLoading={isLoading}
+            submit={submit}
+            changeStatus={changeStatus}
+          />
+        </div>
       </LoginContainer>
     </LoginWrapper>
   )

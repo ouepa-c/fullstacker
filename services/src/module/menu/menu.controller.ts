@@ -2,8 +2,11 @@ import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/commo
 import { MenuService } from './menu.service'
 import { CreateMenuDto } from './dto/create-menu.dto'
 import { UpdateMenuDto } from './dto/update-menu.dto'
+import Auth from '../../common/guard/auth.guard'
+import { Roles } from '../../../enum/global'
 
 @Controller('menu')
+@Auth(Roles.SUPER_ADMIN)
 export class MenuController {
   constructor(private readonly menuService: MenuService) {
   }

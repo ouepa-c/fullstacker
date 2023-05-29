@@ -16,9 +16,9 @@ const useIntersectionObserver =
     useEffect(() => {
       observer.observe(targetRef.current as ElementType)
       return () => {
-        observer.unobserve(targetRef.current as ElementType)
+        targetRef.current && observer.unobserve(targetRef.current as ElementType)
       }
-    }, [targetRef.current])
+    }, [])
 
     return targetRef
   }

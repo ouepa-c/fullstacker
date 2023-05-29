@@ -18,6 +18,7 @@ import type ModifyUserDto from './dto/modify-user.dto'
 export const userinfo_response = {
   id: true,
   username: true,
+  nickname: true,
   email: true,
   github: true,
   qq: true,
@@ -63,7 +64,7 @@ export class UserService {
         }
       })
     } catch (e) {
-      throw new BadRequestException('userAlreadyExists', '用户已被注册，请检查邮箱或手机号')
+      throw new BadRequestException('userAlreadyExists', '用户名已被注册')
     }
   }
 

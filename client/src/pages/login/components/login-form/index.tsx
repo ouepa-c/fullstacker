@@ -1,38 +1,53 @@
-import React, { ChangeEvent, type ReactNode, useState } from 'react'
+import React, { type ReactNode, useEffect } from 'react'
 import _ from 'classnames'
-import { Button, FormElement, Input, Link, Tooltip } from '@nextui-org/react'
-import { RegisterInfo } from 'pages/login/components/register-form'
+import { Button, Input, Link, Loading, Tooltip } from '@nextui-org/react'
+import { FieldTypes } from '@/utils/form-validate'
+import useFieldValidate from '@/hooks/useFieldValidate'
+import { message } from 'antd'
+import useFormChange from '@/hooks/useFormChange'
 
 export interface LoginFormProps {
   children?: ReactNode
   isLogin: boolean
   changeStatus: () => void
   submit: (formInfo: LoginInfo | RegisterInfo) => void
-}
-
-export interface LoginInfo {
-  username: string
-  password: string
+  isLoading: boolean
 }
 
 const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
-  const {isLogin, changeStatus, submit} = props
+  const {isLogin, changeStatus, submit, isLoading} = props
 
-  const [forminfo, setFormInfo] = useState<LoginInfo>({
+  const {
+    formInfo,
+    setFormInfo,
+    handleFieldChange
+  } = useFormChange({
     username: '',
     password: ''
   })
 
-  const handleFieldChange = (field: keyof LoginInfo) =>
-    (e: ChangeEvent<FormElement>) => {
-      setFormInfo(form => ({
-        ...form,
-        [field]: e.target.value
-      }))
-    }
+  const {
+    helpText,
+    handleFieldValidate,
+    validate,
+    reset
+  } = useFieldValidate(formInfo)
+
+  useEffect(() => {
+    reset()
+    setFormInfo({
+      username: '',
+      password: ''
+    })
+  }, [isLogin])
 
   const handleLogin = () => {
-    submit(forminfo)
+    if (!validate()) {
+      message.destroy()
+      message.warning('请完善登录信息')
+    } else {
+      submit(formInfo)
+    }
   }
 
   return (
@@ -44,15 +59,25 @@ const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
         <div className="form-item">
           <Input
             underlined
+            color="secondary"
             width={'270px'} clearable
-            value={forminfo.username} onChange={handleFieldChange('username')}
-            helperText="" helperColor="error" labelPlaceholder="Admin"
+            value={formInfo.username}
+            onChange={handleFieldChange('username')}
+            onBlur={handleFieldValidate(FieldTypes.username)}
+            helperText={helpText[FieldTypes.username]}
+            helperColor="error" labelPlaceholder="Admin"
           />
         </div>
         <div className="form-item">
           <Input.Password
+            autoComplete="off"
             width={'270px'} underlined clearable
-            value={forminfo.password} onChange={handleFieldChange('password')}
+            value={formInfo.password}
+            color="secondary"
+            onChange={handleFieldChange('password')}
+            onBlur={handleFieldValidate(FieldTypes.password)}
+            helperText={helpText[FieldTypes.password]}
+            helperColor="error"
             labelPlaceholder="Password"
           />
         </div>
@@ -60,7 +85,10 @@ const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
           <Button
             shadow rounded size="sm" color="success" onPress={handleLogin}
           >
-            Sign in
+            {isLoading
+              ? <Loading type="points-opacity" color="white"/>
+              : 'Sign in'
+            }
           </Button>
           <Tooltip content="没有账号，现在去注册" placement="rightEnd" color="invert">
             <Button

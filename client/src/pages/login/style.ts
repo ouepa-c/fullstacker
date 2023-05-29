@@ -92,7 +92,7 @@ export const LoginContainer = styled.div`
     transform: rotateY(90deg);
 
     .form-item {
-      padding: 16px 0;
+      padding: 17px 0;
     }
 
     .arrow-down {

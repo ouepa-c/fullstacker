@@ -1,40 +1,38 @@
-import React, { ChangeEvent, type ReactNode, useRef, useState } from 'react'
+import React, { type ReactNode, useEffect, useRef, useState } from 'react'
 import _ from 'classnames'
-import { Button, FormElement, Input, Tooltip } from '@nextui-org/react'
-import { LoginInfo } from 'pages/login/components/login-form'
+import { Button, Input, Loading, Tooltip } from '@nextui-org/react'
 import ArrowDown from 'assets/svg/arrow-down'
 import useIntersectionObserver from '@/hooks/useIntersectionObserver'
+import useFieldValidate from '@/hooks/useFieldValidate'
+import { FieldTypes } from '@/utils/form-validate'
+import { message } from 'antd'
+import useFormChange from '@/hooks/useFormChange'
 
 export interface RegisterFormProps {
   children?: ReactNode
   isLogin: boolean
   changeStatus: () => void
   submit: (formInfo: LoginInfo | RegisterInfo) => void
-}
-
-export interface RegisterInfo {
-  nickname: string
-  username: string
-  password: string
-  re_password: string
-  github: string
-  email: string
-  phone: string
+  isLoading: boolean
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
-  const {isLogin, changeStatus, submit} = props
+  const {isLogin, changeStatus, submit, isLoading} = props
   const [showArrow, setShowArrow] = useState(true)
-
   const contentRef = useRef<HTMLDivElement>(null)
-
   const observeBox = useIntersectionObserver(
     (isIntersecting) => {
       setShowArrow(!isIntersecting)
-    }, {root: contentRef.current}
+    }, {
+      root: contentRef.current
+    }
   )
 
-  const [formInfo, setFormInfo] = useState<RegisterInfo>({
+  const {
+    formInfo,
+    setFormInfo,
+    handleFieldChange
+  } = useFormChange({
     nickname: '',
     username: '',
     password: '',
@@ -44,16 +42,42 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
     phone: ''
   })
 
-  const handleFieldChange = (field: keyof RegisterInfo) =>
-    (e: ChangeEvent<FormElement>) => {
-      setFormInfo(prev => ({
-        ...prev,
-        [field]: e.target.value
-      }))
-    }
+  const {
+    helpText,
+    handleFieldValidate,
+    reset,
+    validate
+  } = useFieldValidate(formInfo)
+
+  useEffect(() => {
+    reset()
+    setFormInfo({
+      nickname: '',
+      username: '',
+      password: '',
+      re_password: '',
+      github: '',
+      email: '',
+      phone: ''
+    })
+  }, [isLogin])
 
   const handleRegister = () => {
-    submit(formInfo)
+    message.destroy()
+    if (!validate()) {
+      message.warning('请完善注册信息')
+    } else {
+      const {password, re_password} = formInfo
+      if (password !== re_password) {
+        return message.error('两次密码不一致')
+      }
+      const deep = JSON.parse(JSON.stringify(formInfo))
+      for (const key in deep) {
+        !deep[key] && (delete deep[key])
+        delete deep['re_password']
+      }
+      submit(deep)
+    }
   }
 
   return (
@@ -68,7 +92,10 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             clearable labelLeft="Nickname*"
             placeholder="here's your nickname"
             value={formInfo.nickname}
+            helperText={helpText[FieldTypes.nickname]}
+            helperColor="error"
             onChange={handleFieldChange('nickname')}
+            onBlur={handleFieldValidate(FieldTypes.nickname)}
           />
         </div>
         <div className="form-item">
@@ -77,7 +104,10 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             clearable labelLeft="Account*"
             placeholder="hey there!"
             value={formInfo.username}
+            helperText={helpText[FieldTypes.username]}
+            helperColor="error"
             onChange={handleFieldChange('username')}
+            onBlur={handleFieldValidate(FieldTypes.username)}
           />
         </div>
         <div className="form-item">
@@ -85,8 +115,11 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             width={'280px'} aria-label="password"
             labelLeft="Password*"
             placeholder="password here"
+            helperText={helpText[FieldTypes.password]}
+            helperColor="error"
+            onBlur={handleFieldValidate(FieldTypes.password)}
+            onChange={handleFieldChange(FieldTypes.password)}
             value={formInfo.password}
-            onChange={handleFieldChange('password')}
           />
         </div>
         <div className="form-item">
@@ -105,6 +138,9 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             placeholder="your email"
             value={formInfo.email}
             onChange={handleFieldChange('email')}
+            helperText={helpText[FieldTypes.email]}
+            helperColor="error"
+            onBlur={handleFieldValidate(FieldTypes.email)}
           />
         </div>
         <div className="form-item">
@@ -114,6 +150,9 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             placeholder="your github"
             value={formInfo.github}
             onChange={handleFieldChange('github')}
+            helperText={helpText[FieldTypes.github]}
+            helperColor="error"
+            onBlur={handleFieldValidate(FieldTypes.github)}
           />
         </div>
         <div className="form-item">
@@ -123,6 +162,9 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
             placeholder="your phone"
             value={formInfo.phone}
             onChange={handleFieldChange('phone')}
+            helperText={helpText[FieldTypes.phone]}
+            helperColor="error"
+            onBlur={handleFieldValidate(FieldTypes.phone)}
           />
         </div>
         <div ref={observeBox} style={{minHeight: '4px', width: '100%'}}/>
@@ -139,7 +181,10 @@ const RegisterForm: React.FC<RegisterFormProps> = React.memo((props) => {
           shadow rounded size="lg"
           onPress={handleRegister}
         >
-          Sign Up!
+          {isLoading
+            ? <Loading type="points-opacity" color="white"/>
+            : 'Sign up!'
+          }
         </Button>
         <Tooltip content="已有账号?去登陆" color="invert" placement="right">
           <Button

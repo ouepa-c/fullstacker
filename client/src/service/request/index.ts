@@ -24,7 +24,7 @@ class Requester {
       },
       error => {
 
-        return Promise.reject(error)
+        return Promise.reject(error.response.data as ErrorResponse)
       }
     )
     this.instance.interceptors.request.use(

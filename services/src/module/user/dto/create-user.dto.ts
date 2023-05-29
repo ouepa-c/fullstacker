@@ -4,6 +4,9 @@ import { Exclude } from 'class-transformer'
 export class CreateUserDto {
   @IsOptional()
   @IsString()
+  @Length(4, 10, {
+    message: '请输入昵称4-10位'
+  })
   readonly nickname: string
 
   @IsString()

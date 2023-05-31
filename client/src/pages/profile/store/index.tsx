@@ -9,12 +9,14 @@ export interface ProfileState {
   isLogin: boolean
   isLoading: boolean
   userProfile: UserProfile
+  isDarkTheme: boolean
 }
 
 const initialState: ProfileState = {
   isLogin: true,
   userProfile: {} as UserProfile,
-  isLoading: false
+  isLoading: false,
+  isDarkTheme: false
 }
 
 const profile = createSlice({
@@ -29,6 +31,9 @@ const profile = createSlice({
     },
     changeIsLoading(store, {payload}: PayloadAction<boolean>) {
       store.isLoading = payload
+    },
+    changeTheme(store, {payload}: PayloadAction<void>) {
+      store.isDarkTheme = !store.isDarkTheme
     }
   }
 })
@@ -93,5 +98,5 @@ export const fetchUserProfile = createAsyncThunk(
   }
 )
 
-export const {changeIsLogin, handleSaveUserProfile, changeIsLoading} = profile.actions
+export const {changeIsLogin, handleSaveUserProfile, changeIsLoading, changeTheme} = profile.actions
 export default profile.reducer

@@ -14,7 +14,8 @@ export const routes: RouteObject[] = [
   },
   {
     path: '/home',
-    element: lazyload(() => import('pages/home'))
+    element: lazyload(() => import('pages/home')),
+    children: []
   },
   {
     path: '/login',

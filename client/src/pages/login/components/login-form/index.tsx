@@ -100,9 +100,11 @@ const LoginForm: React.FC<LoginFormProps> = React.memo((props) => {
           </Tooltip>
         </div>
         <div className="tip">
-          <Link isExternal color="text">
-            忘记密码
-          </Link>
+          <Tooltip title="忘记密码？现在找回" placement="bottom">
+            <Link isExternal color="text">
+              忘记密码
+            </Link>
+          </Tooltip>
         </div>
       </div>
     </div>

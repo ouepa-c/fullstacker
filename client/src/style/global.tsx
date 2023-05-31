@@ -2,21 +2,49 @@ import { createGlobalStyle } from 'styled-components'
 
 export const GlobalStyle = createGlobalStyle`
   html {
+    // 文字颜色
     --text-color: #333;
-    --bg: #fafafa;
+    // 背景色
+    --bg: #fefefe;
+    // navbar下划线
+    --nav-bar-underline: #eee;
     --anchor-color: #11181c;
+    --bg-alpha: rgba(255, 255, 255, .75);
+    --primary-color: #7828c8;
+    --navbar-alpha: #f1f3f5;
+  }
+
+  main#entry {
+    position: relative;
+    z-index: 99999999;
+  }
+
+  img {
+    max-width: 100%;
   }
 
   html[theme="dark"] {
     --text-color: #fff;
-    --bg: #212121;
+    --bg: #494949;
+    // navbar下划线
+    --nav-bar-underline: #333;
     --anchor-color: #fdfdfd;
+    --bg-alpha: rgba(1, 0, 1, 0.75);
+    --primary-color: #9430fc;
+    --navbar-alpha: #202125;
+  }
+
+  .wrapper {
+    width: 1200px !important;
+    margin: 0 auto;
   }
 
   body {
     background-color: var(--bg);
-    width: 100vw;
+    color: var(--text-color);
+    width: 100%;
     height: 100vh;
+    overflow: auto;
   }
 
   div {
@@ -67,17 +95,19 @@ export const GlobalStyle = createGlobalStyle`
     display: block;
   }
 
-  @keyframes shake {
-    from {
-      transform: translateY(-25%);
-    }
-    50% {
+  .bg-gradient {
+    position: fixed;
+    z-index: 1;
 
-      transform: translateY(0);
+    &.g01 {
+      top: -50%;
+      right: -50%;
+      left: -10%;
     }
-    to {
 
-      transform: translateY(-25%);
+    &.g02 {
+      top: -50%;
+      right: -50%;
     }
   }
 `

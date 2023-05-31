@@ -4,6 +4,7 @@ const theme = {
     'flex-center': `
     display:flex;
     justify-content:center;
+    align-items:center;
     `
   }
 } as const
